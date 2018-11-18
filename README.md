@@ -19,7 +19,8 @@ using the psycopg2 module to connect to the database.
 ### The project's output
 The questions that need to be answered by the project are:
 1. What are the most popular three articles of all time?
-   (Display the answer as article's title followed by -- and number of views)
+   (Display the answer as a list where one row is
+    an article's title followed by -- and number of views)
 2. Who are the most popular article authors of all time?
    (The answer is a list of
     authors followed by total sum of visits to their articles)
@@ -68,7 +69,7 @@ TABLE "articles" CONSTRAINT "articles_author_fkey" FOREIGN KEY (author) REFERENC
 ```
 The table has 4 rows.
 
-### Table Log
+#### Table Log
 
 ```
 Table "public.log"
