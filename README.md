@@ -176,6 +176,40 @@ from (select distinct title as tit from articles) as titles;
  goats
 (8 rows)
 ```
+6. See the first view for the assignment to answer first 2 questions.
+7. Answer the first question:
+```
+news=> select '"' || title || '" -- ' ||  count(title) || ' views'
+from article_log
+group by title
+order by count(title) desc;
+                      ?column?
+-----------------------------------------------------
+ "Candidate is jerk, alleges rival" -- 338647 views
+ "Bears love berries, alleges bear" -- 253801 views
+ "Bad things gone, say good people" -- 170098 views
+ "Goats eat Google's lawn" -- 84906 views
+ "Trouble for troubled troublemakers" -- 84810 views
+ "Balloon goons doomed" -- 84557 views
+ "There are a lot of bears" -- 84504 views
+ "Media obsessed with bears" -- 84383 views
+(8 rows)
+```
+8. Answer the second question:
+```
+news=> select name || ' -- ' || count(name) || ' views'
+news-> from article_log
+news-> group by name
+news-> order by count(name) desc;
+                ?column?
+----------------------------------------
+ Ursula La Multa -- 507594 views
+ Rudolf von Treppenwitz -- 423457 views
+ Anonymous Contributor -- 170098 views
+ Markoff Chaney -- 84557 views
+(4 rows)
+```
+
 ## Views created for this project.
 
 ### "article_log" view for the first 2 questions.
