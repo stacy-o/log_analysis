@@ -85,3 +85,125 @@ Indexes:
 "log_pkey" PRIMARY KEY, btree (id)
 ```
 The table has 1,677,735 rows
+
+## Helper queries (and results) that had been ran before implementing this project.
+
+1. What are the different statuses?
+```
+news=> select distinct status from log;
+    status
+---------------
+ 404 NOT FOUND
+ 200 OK
+(2 rows)
+```
+2. What the paths are like?
+   They seem to be the only thing that can connect us to articles table.
+```
+news=> select distinct path from log limit 20;
+                path
+-------------------------------------
+ /article/goats-eat-googlesh
+ /article/goats-eat-googlesy
+ /article/candidate-is-jerkb
+ /article/balloon-goons-doomedr
+ /article/bad-things-gonex
+ /article/candidate-is-jerkn
+ /article/bears-love-berriese
+ /article/media-obsessed-with-bearsl
+ /article/candidate-is-jerky
+ /article/bears-love-berriesb
+ /article/media-obsessed-with-bearsa
+ /article/candidate-is-jerkg
+ /article/trouble-for-troubledl
+ /article/bears-love-berriesn
+ /article/bad-things-goneh
+ /article/so-many-bearsq
+ /article/candidate-is-jerkq
+ /article/trouble-for-troubledr
+ /article/bears-love-berriesl
+ /article/balloon-goons-doomedu
+(20 rows)
+```
+3. Now let's look at the articles
+```
+news=> select title from articles;
+               title
+------------------------------------
+ Bad things gone, say good people
+ Balloon goons doomed
+ Bears love berries, alleges bear
+ Candidate is jerk, alleges rival
+ Goats eat Google's lawn
+ Media obsessed with bears
+ Trouble for troubled troublemakers
+ There are a lot of bears
+(8 rows)
+```
+4. We see the extra letters at the end of paths. What if we will look only
+at the successfull paths?
+```
+news=> select distinct path from log where status like '%200%';
+                path
+------------------------------------
+ /
+ /article/goats-eat-googles
+ /article/balloon-goons-doomed
+ /article/trouble-for-troubled
+ /article/candidate-is-jerk
+ /article/bears-love-berries
+ /article/bad-things-gone
+ /article/so-many-bears
+ /article/media-obsessed-with-bears
+(9 rows)
+```
+5. Can we turn an article title into a thing uniquely identifying path?
+We see that the first word of the title changed to lower case combined with
+preceding forward slash would work (except for so-many-bears).
+We could use the replace function for that one.
+```
+news=> select replace(lower(substring(tit from 0 for position(' ' in tit))), 'there', 'so')
+from (select distinct title as tit from articles) as titles;
+  replace
+-----------
+ bears
+ bad
+ balloon
+ trouble
+ so
+ media
+ candidate
+ goats
+(8 rows)
+```
+## Views created for this project.
+
+### "article_log" view for the first 2 questions.
+
+This view combines the information from all 3 tables to answer a lot of
+different questions viewing log from authors and articles points of view.
+This view will include only successful articles access.
+
+```
+news=> create view article_log
+news->   as select articles.title,
+news->             authors.name,
+news->             log.path,
+news->             log.id,
+news->             log.time,
+news->             log.ip
+news-> from articles, authors, log
+news-> where log.status like '%200%'
+news->   and articles.author = authors.id
+news->   and log.path like '%/'
+news->         || (replace(
+news(>               lower(substring(
+news(>                  articles.title
+news(>                  from 0
+news(>                  for position(' ' in articles.title)
+news(>               )),
+news(>               'there',
+news(>               'so'
+news(>            )) || '%';
+CREATE VIEW
+```
