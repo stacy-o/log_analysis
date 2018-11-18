@@ -209,14 +209,66 @@ news-> order by count(name) desc;
  Markoff Chaney -- 84557 views
 (4 rows)
 ```
+9. What is the time span in the log?
+```
+news=> select min(time), max(time) from log;
+          min           |          max
+------------------------+------------------------
+ 2016-07-01 07:00:00+00 | 2016-07-31 19:59:55+00
+(1 row)
+```
+  It all happens in the same months, so we can use "day" part
+  of the date to aggregate the data.
+10. See the second view.
+11. Show the second view (as there are only 31 rows).
+```
+news=> select * from statistics;
+ good  | error | day | total | percent
+-------+-------+-----+-------+---------
+ 38431 |   274 |   1 | 38705 |     387
+ 54811 |   389 |   2 | 55200 |     552
+ 54465 |   401 |   3 | 54866 |     548
+ 54523 |   380 |   4 | 54903 |     549
+ 54162 |   423 |   5 | 54585 |     545
+ 54354 |   420 |   6 | 54774 |     547
+ 54380 |   360 |   7 | 54740 |     547
+ 54666 |   418 |   8 | 55084 |     550
+ 54826 |   410 |   9 | 55236 |     552
+ 54118 |   371 |  10 | 54489 |     544
+ 54094 |   403 |  11 | 54497 |     544
+ 54466 |   373 |  12 | 54839 |     548
+ 54797 |   383 |  13 | 55180 |     551
+ 54813 |   383 |  14 | 55196 |     551
+ 54554 |   408 |  15 | 54962 |     549
+ 54124 |   374 |  16 | 54498 |     544
+ 54642 |  1265 |  17 | 55907 |     559
+ 55215 |   374 |  18 | 55589 |     555
+ 54908 |   433 |  19 | 55341 |     553
+ 54174 |   383 |  20 | 54557 |     545
+ 54823 |   418 |  21 | 55241 |     552
+ 54800 |   406 |  22 | 55206 |     552
+ 54521 |   373 |  23 | 54894 |     548
+ 54669 |   431 |  24 | 55100 |     551
+ 54222 |   391 |  25 | 54613 |     546
+ 53982 |   396 |  26 | 54378 |     543
+ 54122 |   367 |  27 | 54489 |     544
+ 54404 |   393 |  28 | 54797 |     547
+ 54569 |   382 |  29 | 54951 |     549
+ 54676 |   397 |  30 | 55073 |     550
+ 45516 |   329 |  31 | 45845 |     458
+(31 rows)
+```
 
 ## Views created for this project.
 
-### "article_log" view for the first 2 questions.
+### The "article_log" view for the first 2 questions.
 
 This view combines the information from all 3 tables to answer a lot of
 different questions viewing log from authors and articles points of view.
 This view will include only successful articles access.
+This view could answer other questions like: from how many different IPs
+was accessed each article? Which article was most popular on a particular day?
+Which day was the "peak interest" for a particular article or author? And so on.
 
 ```
 news=> create view article_log
@@ -239,5 +291,34 @@ news(>               )),
 news(>               'there',
 news(>               'so'
 news(>            )) || '%';
+CREATE VIEW
+```
+
+### The "statistics" view for the last question.
+This view aggregates counts of success and failures for each day, and calculates
+total as well as how much attempts constitutes one percent of the day's traffic.
+This view can answer additional questions such as what was the most busy day,
+What is the biggest traffic fluctuation, is there any correlation between
+traffic, errors and days of the week and so on.
+```
+news=> create view statistics as
+news-> select good.count as good,
+news->        bad.count as error,
+news->        good.day,
+news->        good.count + bad.count as total,
+news->        (good.count + bad.count)/100 as percent
+news->   from (
+news(>         select date_part('day', time) as day, count(*) as count
+news(>           from log
+news(>          where status like '%200%'
+news(>         group by date_part('day', time)
+news(>        ) as good,
+news->        (
+news(>         select date_part('day', time) as day, count(*) as count
+news(>           from log
+news(>          where status not like '%200%'
+news(>         group by date_part('day', time)
+news(>        ) as bad
+news->  where good.day = bad.day;
 CREATE VIEW
 ```
