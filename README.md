@@ -345,6 +345,25 @@ news(>            )) || '%';
 CREATE VIEW
 ```
 
+## The "silver_slug" view.
+This view is the same as "article_log", but the query for it is much simpler.
+This is what happens when you don't judge data by the column name, but instead
+go and check it out.
+```
+create view silver_slug --(as in "silver bullet")
+  as select articles.title,
+            authors.name,
+            log.path,
+            log.id,
+            log.time,
+            log.ip
+       from articles, authors, log
+      where log.status like '%200%'
+        and articles.author = authors.id
+        and log.path like ('%/' || articles.slug || '%');
+CREATE VIEW
+```
+
 ### The "statistics" view for the last question.
 This view aggregates counts of success and failures for each day, and calculates
 total as well as how many attempts constitutes one percent of the day's traffic.
