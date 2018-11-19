@@ -141,7 +141,7 @@ news=> select title from articles;
 (8 rows)
 ```
 4. We see the extra letters at the end of paths. What if we will look only
-at the successfull paths?
+at the successful paths?
 ```
 news=> select distinct path from log where status like '%200%';
                 path
@@ -347,7 +347,7 @@ CREATE VIEW
 
 ### The "statistics" view for the last question.
 This view aggregates counts of success and failures for each day, and calculates
-total as well as how much attempts constitutes one percent of the day's traffic.
+total as well as how many attempts constitutes one percent of the day's traffic.
 This view can answer additional questions such as what was the most busy day,
 What is the biggest traffic fluctuation, is there any correlation between
 traffic, errors and days of the week and so on.
