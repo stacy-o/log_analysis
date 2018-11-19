@@ -258,6 +258,57 @@ news=> select * from statistics;
  45516 |   329 |  31 | 45845 |     458
 (31 rows)
 ```
+12. See the errors percentage:
+```
+news=> select day, error, percent, substring(
+news(>  ('' || error::float /percent) from 0 for  4 ) as result from statistics;
+ day | error | percent | result
+-----+-------+---------+--------
+   1 |   274 |     387 | 0.7
+   2 |   389 |     552 | 0.7
+   3 |   401 |     548 | 0.7
+   4 |   380 |     549 | 0.6
+   5 |   423 |     545 | 0.7
+   6 |   420 |     547 | 0.7
+   7 |   360 |     547 | 0.6
+   8 |   418 |     550 | 0.7
+   9 |   410 |     552 | 0.7
+  10 |   371 |     544 | 0.6
+  11 |   403 |     544 | 0.7
+  12 |   373 |     548 | 0.6
+  13 |   383 |     551 | 0.6
+  14 |   383 |     551 | 0.6
+  15 |   408 |     549 | 0.7
+  16 |   374 |     544 | 0.6
+  17 |  1265 |     559 | 2.2
+  18 |   374 |     555 | 0.6
+  19 |   433 |     553 | 0.7
+  20 |   383 |     545 | 0.7
+  21 |   418 |     552 | 0.7
+  22 |   406 |     552 | 0.7
+  23 |   373 |     548 | 0.6
+  24 |   431 |     551 | 0.7
+  25 |   391 |     546 | 0.7
+  26 |   396 |     543 | 0.7
+  27 |   367 |     544 | 0.6
+  28 |   393 |     547 | 0.7
+  29 |   382 |     549 | 0.6
+  30 |   397 |     550 | 0.7
+  31 |   329 |     458 | 0.7
+(31 rows)
+```
+13. The query that answers the last (3rd) question:
+```
+select 'July ' || day || ', 2016 -- '
+       || substring(('' || error::float /percent) from 0 for  4 )
+       || '%  errors' as answer3
+  from statistics
+ where error > percent;
+            answer3
+-------------------------------
+ July 17, 2016 -- 2.2%  errors
+(1 row)
+```
 
 ## Views created for this project.
 
