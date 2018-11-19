@@ -5,6 +5,99 @@ The database contains newspaper articles,
 as well as the web server log for the site.
 The log has a database row for each time a reader loaded a web page.
 Your code will answer questions about the site's user activity.
+For mentor's convenience the details of the project material are at the bottom
+AFTER the required solution-related sections.
+
+## How to run this project
+
+* Download psycopg2 library for python.
+* Create the DB "news" using the supplied sql file
+* Run the views statement in the next section of this README in that DB.
+* execute the script python reports.py
+
+## Views created for this project.
+
+### The "article_log" view for the first 2 questions.
+
+This view combines the information from all 3 tables to answer a lot of
+different questions viewing log from authors and articles points of view.
+This view will include only successful articles access.
+This view could answer other questions like: from how many different IPs
+was accessed each article? Which article was most popular on a particular day?
+Which day was the "peak interest" for a particular article or author? And so on.
+
+```
+news=> create view article_log
+news->   as select articles.title,
+news->             authors.name,
+news->             log.path,
+news->             log.id,
+news->             log.time,
+news->             log.ip
+news-> from articles, authors, log
+news-> where log.status like '%200%'
+news->   and articles.author = authors.id
+news->   and log.path like '%/'
+news->         || (replace(
+news(>               lower(substring(
+news(>                  articles.title
+news(>                  from 0
+news(>                  for position(' ' in articles.title)
+news(>               )),
+news(>               'there',
+news(>               'so'
+news(>            )) || '%';
+CREATE VIEW
+```
+
+## The "silver_slug" view.
+This view is the same as "article_log", but the query for it is much simpler.
+This is what happens when you don't judge data by the column name, but instead
+go and check it out.
+```
+create view silver_slug --(as in "silver bullet")
+  as select articles.title,
+            authors.name,
+            log.path,
+            log.id,
+            log.time,
+            log.ip
+       from articles, authors, log
+      where log.status like '%200%'
+        and articles.author = authors.id
+        and log.path like ('%/' || articles.slug || '%');
+CREATE VIEW
+```
+
+### The "statistics" view for the last question.
+This view aggregates counts of success and failures for each day, and calculates
+total as well as how many attempts constitutes one percent of the day's traffic.
+This view can answer additional questions such as what was the most busy day,
+What is the biggest traffic fluctuation, is there any correlation between
+traffic, errors and days of the week and so on.
+```
+news=> create view statistics as
+news-> select good.count as good,
+news->        bad.count as error,
+news->        good.day,
+news->        good.count + bad.count as total,
+news->        (good.count + bad.count)/100 as percent
+news->   from (
+news(>         select date_part('day', time) as day, count(*) as count
+news(>           from log
+news(>          where status like '%200%'
+news(>         group by date_part('day', time)
+news(>        ) as good,
+news->        (
+news(>         select date_part('day', time) as day, count(*) as count
+news(>           from log
+news(>          where status not like '%200%'
+news(>         group by date_part('day', time)
+news(>        ) as bad
+news->  where good.day = bad.day;
+CREATE VIEW
+```
+
 
 ## Project details
 
@@ -308,87 +401,4 @@ select 'July ' || day || ', 2016 -- '
 -------------------------------
  July 17, 2016 -- 2.2%  errors
 (1 row)
-```
-
-## Views created for this project.
-
-### The "article_log" view for the first 2 questions.
-
-This view combines the information from all 3 tables to answer a lot of
-different questions viewing log from authors and articles points of view.
-This view will include only successful articles access.
-This view could answer other questions like: from how many different IPs
-was accessed each article? Which article was most popular on a particular day?
-Which day was the "peak interest" for a particular article or author? And so on.
-
-```
-news=> create view article_log
-news->   as select articles.title,
-news->             authors.name,
-news->             log.path,
-news->             log.id,
-news->             log.time,
-news->             log.ip
-news-> from articles, authors, log
-news-> where log.status like '%200%'
-news->   and articles.author = authors.id
-news->   and log.path like '%/'
-news->         || (replace(
-news(>               lower(substring(
-news(>                  articles.title
-news(>                  from 0
-news(>                  for position(' ' in articles.title)
-news(>               )),
-news(>               'there',
-news(>               'so'
-news(>            )) || '%';
-CREATE VIEW
-```
-
-## The "silver_slug" view.
-This view is the same as "article_log", but the query for it is much simpler.
-This is what happens when you don't judge data by the column name, but instead
-go and check it out.
-```
-create view silver_slug --(as in "silver bullet")
-  as select articles.title,
-            authors.name,
-            log.path,
-            log.id,
-            log.time,
-            log.ip
-       from articles, authors, log
-      where log.status like '%200%'
-        and articles.author = authors.id
-        and log.path like ('%/' || articles.slug || '%');
-CREATE VIEW
-```
-
-### The "statistics" view for the last question.
-This view aggregates counts of success and failures for each day, and calculates
-total as well as how many attempts constitutes one percent of the day's traffic.
-This view can answer additional questions such as what was the most busy day,
-What is the biggest traffic fluctuation, is there any correlation between
-traffic, errors and days of the week and so on.
-```
-news=> create view statistics as
-news-> select good.count as good,
-news->        bad.count as error,
-news->        good.day,
-news->        good.count + bad.count as total,
-news->        (good.count + bad.count)/100 as percent
-news->   from (
-news(>         select date_part('day', time) as day, count(*) as count
-news(>           from log
-news(>          where status like '%200%'
-news(>         group by date_part('day', time)
-news(>        ) as good,
-news->        (
-news(>         select date_part('day', time) as day, count(*) as count
-news(>           from log
-news(>          where status not like '%200%'
-news(>         group by date_part('day', time)
-news(>        ) as bad
-news->  where good.day = bad.day;
-CREATE VIEW
 ```
